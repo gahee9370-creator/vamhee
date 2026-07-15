@@ -1,0 +1,505 @@
+:root {
+  --ac: #808b72;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: #ded7cb;
+  font-family: 'Gowun Dodum', sans-serif;
+  color: #3a3630;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: #808b72; }
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pulse {
+  from { opacity: .55; }
+  to { opacity: 1; }
+}
+
+.swipe { scrollbar-width: none; -ms-overflow-style: none; }
+.swipe::-webkit-scrollbar { display: none; }
+
+.card {
+  position: relative;
+  max-width: 430px;
+  margin: 0 auto;
+  background: #f8f5f0;
+  min-height: 100vh;
+  overflow: hidden;
+  box-shadow: 0 0 44px rgba(0, 0, 0, .10);
+}
+
+/* ---------- music toggle ---------- */
+.music-toggle {
+  position: fixed;
+  top: 14px;
+  right: calc(50% - 201px);
+  z-index: 50;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(58, 54, 48, .14);
+  background: rgba(248, 245, 240, .82);
+  backdrop-filter: blur(6px);
+  color: var(--ac);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
+}
+.music-note { display: inline-block; opacity: .5; }
+.music-note.playing { opacity: 1; animation: pulse 1s infinite alternate; }
+
+/* ---------- image slot ---------- */
+.img-slot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, .04);
+  cursor: pointer;
+}
+.img-slot[data-shape="rect"] { border-radius: 0; }
+.img-slot[data-shape="rounded"] { border-radius: 12px; }
+.img-slot-inner { position: absolute; inset: 0; }
+.img-slot-img {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  transform: scale(1);
+  transform-origin: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.img-slot-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 12px;
+  color: rgba(58, 54, 48, .5);
+  font-size: 13px;
+  user-select: none;
+}
+.img-slot-empty svg { opacity: .45; }
+.img-slot-empty .cap { max-width: 90%; font-weight: 500; letter-spacing: .01em; }
+.img-slot-empty .sub { font-size: 11px; }
+.img-slot-empty .sub u { text-underline-offset: 2px; text-decoration-color: rgba(58, 54, 48, .3); }
+.img-slot.drag-over { outline: 2px solid var(--ac); outline-offset: -2px; background: rgba(128, 139, 114, .12); }
+.img-slot.filled .img-slot-img { display: block; }
+.img-slot.filled .img-slot-empty { display: none; }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.hero-slot { position: absolute; inset: 0; }
+.hero-slot[data-shape="rect"] { border-radius: 0; }
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(40, 37, 32, .06) 0%, rgba(40, 37, 32, 0) 30%, rgba(40, 37, 32, .42) 100%);
+}
+.hero-text {
+  position: relative;
+  pointer-events: none;
+  padding: 0 30px 46px;
+  text-align: center;
+  color: #fdfbf7;
+}
+.eyebrow {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10.5px;
+  letter-spacing: .34em;
+  opacity: .9;
+  color: var(--ac);
+}
+.hero-text .eyebrow { opacity: .9; color: inherit; letter-spacing: .34em; }
+.hero-names {
+  font-family: 'Gowun Batang', serif;
+  font-size: 33px;
+  letter-spacing: .02em;
+  margin-top: 16px;
+  line-height: 1.35;
+}
+.hero-names .heart { font-size: 18px; margin: 0 12px; vertical-align: middle; opacity: .85; }
+.hero-text .hr { width: 34px; height: 1px; background: rgba(253, 251, 247, .6); margin: 18px auto; }
+.hero-date { font-size: 13px; letter-spacing: .06em; opacity: .95; }
+.hero-venue { font-size: 12px; opacity: .85; margin-top: 5px; }
+
+/* ---------- d-day ---------- */
+.dday {
+  padding: 26px 30px;
+  text-align: center;
+  border-bottom: 1px solid rgba(58, 54, 48, .08);
+}
+.dday-title { font-family: 'Gowun Batang', serif; font-size: 15px; margin-bottom: 16px; }
+.dday-row { display: flex; justify-content: center; gap: 10px; }
+.dday-cell { min-width: 44px; }
+.dday-cell.wide { min-width: 52px; }
+.dday-num { font-family: 'Gowun Batang', serif; font-size: 24px; color: #4a463f; }
+.dday-num:not(.muted) { color: var(--ac); }
+.dday-label { font-size: 10px; letter-spacing: .1em; color: #9a9284; margin-top: 3px; }
+.dday-colon { align-self: center; color: #cfc7b8; font-size: 16px; }
+
+/* ---------- greeting ---------- */
+.greeting { padding: 60px 34px 54px; text-align: center; }
+.greeting-title { font-family: 'Gowun Batang', serif; font-size: 22px; margin-top: 22px; line-height: 1.6; }
+.greeting-body { font-size: 14px; line-height: 2.15; color: #5f5a51; margin: 26px auto 0; max-width: 300px; }
+.hr { width: 34px; height: 1px; background: rgba(58, 54, 48, .18); }
+.hr.center { margin: 40px auto 34px; }
+.family { display: flex; flex-direction: column; gap: 16px; align-items: center; font-size: 15px; line-height: 1.5; }
+.family .parents { color: #8a8378; }
+.family .rel { font-size: 12px; color: #a9a294; }
+.family .who { font-family: 'Gowun Batang', serif; font-size: 17px; font-weight: 700; }
+
+/* ---------- section head ---------- */
+.section-head { text-align: center; margin-bottom: 40px; }
+.section-head.small { margin-bottom: 14px; }
+.section-title { font-family: 'Gowun Batang', serif; font-size: 22px; margin-top: 12px; }
+
+/* ---------- story ---------- */
+.story-section { padding: 56px 34px 54px; background: #f2ede5; }
+.carousel-wrap { position: relative; }
+.story-scroller {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  margin: 0 -34px;
+  padding: 0 34px;
+  -webkit-overflow-scrolling: touch;
+}
+.story-slide { flex: 0 0 100%; box-sizing: border-box; scroll-snap-align: center; padding-right: 16px; }
+.story-img-wrap { aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: rgba(0, 0, 0, .04); }
+.story-text { text-align: center; margin-top: 22px; }
+.story-no { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac); }
+.story-title { font-family: 'Gowun Batang', serif; font-size: 18px; margin: 8px 0 10px; }
+.story-body { font-size: 13.5px; line-height: 1.95; color: #5f5a51; max-width: 300px; margin: 0 auto; }
+
+.arrow {
+  position: absolute;
+  top: 33%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(248, 245, 240, .92);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .14);
+  color: #3a3630;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 3;
+  user-select: none;
+}
+.arrow.left { left: -4px; }
+.arrow.right { right: -4px; }
+.gallery-section .arrow { top: 50%; }
+
+.dots { display: flex; justify-content: center; align-items: center; gap: 7px; margin-top: 26px; }
+.dots button {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all .2s;
+  height: 7px;
+  border-radius: 9999px;
+  background: rgba(58, 54, 48, .2);
+  width: 7px;
+}
+.dots button.active { background: var(--ac); width: 20px; }
+
+.hint { text-align: center; font-size: 11.5px; color: #a9a294; margin-top: 14px; }
+.gallery-section .hint { margin-top: 16px; }
+
+/* ---------- gallery ---------- */
+.gallery-section { padding: 56px 30px 54px; }
+.gallery-scroller {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 8px;
+  margin: 0 -30px;
+  padding: 0 30px;
+  -webkit-overflow-scrolling: touch;
+}
+.gallery-slide { flex: 0 0 46%; position: relative; aspect-ratio: 1 / 1; scroll-snap-align: center; cursor: pointer; }
+.gallery-img { border-radius: 4px; }
+
+/* ---------- accounts ---------- */
+.accounts-section { padding: 56px 34px 54px; background: #f2ede5; }
+.accounts-intro { font-size: 13px; line-height: 1.9; color: #7c766c; margin-top: 16px; }
+.accordion { margin-top: 20px; }
+.accordion + .accordion { margin-top: 12px; }
+.accordion-toggle {
+  width: 100%;
+  padding: 15px 18px;
+  background: #fdfbf7;
+  border: 1px solid rgba(58, 54, 48, .1);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-family: 'Gowun Dodum', sans-serif;
+  font-size: 14.5px;
+  color: #3a3630;
+}
+.chevron { display: inline-block; transition: transform .2s; color: #a9a294; font-size: 18px; }
+.chevron.open { transform: rotate(90deg); }
+.accordion-panel { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.account-card {
+  background: #fdfbf7;
+  border: 1px solid rgba(58, 54, 48, .08);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.account-role { font-size: 11px; color: #a9a294; }
+.account-bank { font-size: 14px; margin-top: 3px; }
+.account-bank .num { color: #6a655c; }
+.account-owner { font-size: 12.5px; color: #8a8378; margin-top: 2px; }
+.copy-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--ac);
+  background: transparent;
+  color: var(--ac);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'Gowun Dodum', sans-serif;
+}
+
+/* ---------- location ---------- */
+.location-section { padding: 56px 34px 44px; }
+.location-section .section-head { margin-bottom: 28px; }
+.venue-info { text-align: center; margin-bottom: 26px; }
+.venue-name { font-family: 'Gowun Batang', serif; font-size: 18px; }
+.venue-when { font-size: 13px; color: #7c766c; margin-top: 8px; line-height: 1.7; }
+.venue-address { font-size: 12.5px; color: #8a8378; margin: 14px auto 0; line-height: 1.7; max-width: 300px; }
+
+.calendar { background: #f2ede5; border-radius: 10px; padding: 20px 18px 22px; margin-bottom: 22px; }
+.calendar-title { text-align: center; font-family: 'Gowun Batang', serif; font-size: 15px; margin-bottom: 14px; }
+.calendar-dow, .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.calendar-dow { font-size: 11px; color: #a9a294; margin-bottom: 6px; }
+.calendar-dow .sun { color: #c58a83; }
+.calendar-grid div {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  border-radius: 50%;
+  color: #5f5a51;
+}
+.calendar-grid div.sun { color: #c58a83; }
+.calendar-grid div.wedding-day { background: var(--ac); color: #fdfbf7; font-weight: 700; }
+
+.map-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+.map-btn {
+  padding: 13px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(58, 54, 48, .12);
+  background: #fdfbf7;
+  font-size: 12.5px;
+  cursor: pointer;
+  font-family: 'Gowun Dodum', sans-serif;
+  color: #3a3630;
+}
+.venue-detail-link {
+  display: block;
+  text-align: center;
+  padding: 13px 0;
+  border-radius: 8px;
+  border: 1px solid var(--ac);
+  color: var(--ac);
+  font-size: 12.5px;
+}
+
+/* ---------- footer ---------- */
+.site-footer {
+  padding: 44px 34px 54px;
+  text-align: center;
+  background: #f2ede5;
+  border-top: 1px solid rgba(58, 54, 48, .06);
+}
+.footer-names { font-family: 'Gowun Batang', serif; font-size: 16px; line-height: 1.7; color: #4a463f; }
+.footer-sub { font-size: 12.5px; color: #8a8378; margin-top: 8px; }
+.footer-actions { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
+.btn-share {
+  padding: 11px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--ac);
+  color: #fdfbf7;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Gowun Dodum', sans-serif;
+}
+.btn-copy-link {
+  padding: 11px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(58, 54, 48, .14);
+  background: transparent;
+  color: #3a3630;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Gowun Dodum', sans-serif;
+}
+
+/* ---------- lightbox ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(20, 18, 15, .94);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadein .2s ease;
+}
+.lightbox[hidden] { display: none; }
+.lightbox-close { position: absolute; top: 14px; right: 18px; color: #fff; font-size: 30px; line-height: 1; cursor: pointer; opacity: .85; }
+.lightbox-stage {
+  width: 100%;
+  max-width: 430px;
+  height: 74vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  box-sizing: border-box;
+}
+.lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; }
+.lightbox-counter {
+  color: rgba(255, 255, 255, .82);
+  font-size: 13px;
+  font-family: ui-monospace, Menlo, monospace;
+  letter-spacing: .12em;
+  margin-top: 20px;
+}
+.lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+}
+.lightbox-arrow.left { left: 10px; }
+.lightbox-arrow.right { right: 10px; }
+.lightbox-arrow[hidden] { display: none; }
+
+/* ---------- reframe (position/zoom editor) ---------- */
+.reframe {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: rgba(20, 18, 15, .94);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadein .2s ease;
+}
+.reframe[hidden] { display: none; }
+.reframe-stage {
+  position: relative;
+  width: min(86vw, 380px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #222;
+  touch-action: none;
+  cursor: grab;
+}
+.reframe-stage.grabbing { cursor: grabbing; }
+.reframe-img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.reframe-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  width: min(86vw, 380px);
+}
+.reframe-label { color: rgba(255, 255, 255, .75); font-size: 12.5px; font-family: 'Gowun Dodum', sans-serif; }
+.reframe-controls input[type="range"] { width: 100%; }
+.reframe-done {
+  padding: 11px 28px;
+  border-radius: 8px;
+  border: none;
+  background: var(--ac);
+  color: #fdfbf7;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Gowun Dodum', sans-serif;
+}
+
+/* ---------- toast ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  background: rgba(40, 37, 32, .88);
+  color: #fdfbf7;
+  font-size: 12.5px;
+  padding: 10px 18px;
+  border-radius: 20px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+.toast.show { opacity: 1; }
