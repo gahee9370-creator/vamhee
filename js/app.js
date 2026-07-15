@@ -52,27 +52,30 @@
   buildCalendar();
 
   // ============ image slots ============
-  const MAX_DIM = 1600;
+  // Longest edge is kept up to MAX_DIM so uploaded previews stay high-res
+  // (independent of the on-screen slot size). Deployed photos placed as
+  // static files under assets/images/ are shown at full original quality —
+  // this re-encode only applies to in-browser preview uploads.
+  const MAX_DIM = 2400;
   const ACCEPT = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
 
-  async function fileToDataUrl(file, targetW) {
+  async function fileToDataUrl(file) {
     const bitmap = await createImageBitmap(file);
     try {
-      const cap = Math.min(MAX_DIM, Math.max(1, Math.round(targetW * 2)) || MAX_DIM);
-      const scale = Math.min(1, cap / Math.max(bitmap.width, bitmap.height));
+      const longest = Math.max(bitmap.width, bitmap.height);
+      const scale = Math.min(1, MAX_DIM / longest);
       const w = Math.max(1, Math.round(bitmap.width * scale));
       const h = Math.max(1, Math.round(bitmap.height * scale));
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
-      return canvas.toDataURL('image/webp', 0.85);
+      return canvas.toDataURL('image/webp', 0.92);
     } finally {
       if (bitmap.close) bitmap.close();
     }
   }
 
   const slotKey = (id) => 'invite:slot:' + id;
-  const viewKey = (id) => 'invite:view:' + id;
 
   function getSlotData(id) {
     try {
@@ -81,21 +84,10 @@
     } catch (e) { return null; }
   }
   function setSlotData(id, dataUrl) {
-    try { localStorage.setItem(slotKey(id), dataUrl); } catch (e) {}
-  }
-  function getView(id) {
     try {
-      const raw = localStorage.getItem(viewKey(id));
-      return raw ? JSON.parse(raw) : { x: 50, y: 50, s: 1 };
-    } catch (e) { return { x: 50, y: 50, s: 1 }; }
-  }
-  function setView(id, view) {
-    try { localStorage.setItem(viewKey(id), JSON.stringify(view)); } catch (e) {}
-  }
-
-  function applyView(imgEl, view) {
-    imgEl.style.objectPosition = view.x + '% ' + view.y + '%';
-    imgEl.style.transform = 'translate(-50%,-50%) scale(' + view.s + ')';
+      localStorage.setItem(slotKey(id), dataUrl);
+      return true;
+    } catch (e) { return false; }
   }
 
   class ImageSlotController {
@@ -113,28 +105,15 @@
       this.img.addEventListener('load', () => this.root.classList.add('filled'));
       this.img.addEventListener('error', () => this.root.classList.remove('filled'));
 
-      this._clickTimer = null;
-      root.addEventListener('click', (e) => {
+      root.addEventListener('click', () => {
         if (!this.root.classList.contains('filled')) {
+          // Empty slot → pick a file.
           this.input.click();
           return;
         }
-        // Delay the single-click action (open viewer) so a following second
-        // click within the dblclick window can cancel it instead of racing
-        // against the lightbox covering the slot mid-gesture.
-        clearTimeout(this._clickTimer);
-        this._clickTimer = setTimeout(() => {
-          this._clickTimer = null;
-          this.openViewer(e);
-        }, 250);
-      });
-      root.addEventListener('dblclick', (e) => {
-        clearTimeout(this._clickTimer);
-        this._clickTimer = null;
-        if (!this.root.classList.contains('filled')) return;
-        e.preventDefault();
-        e.stopPropagation();
-        openReframe(this);
+        // Filled: only the gallery opens the enlarged viewer. Story/hero
+        // slots do nothing on click (no enlarge, no zoom).
+        if (galleryIds.indexOf(this.id) >= 0) openLightbox(this.id);
       });
       this.input.addEventListener('change', () => {
         const f = this.input.files && this.input.files[0];
@@ -168,24 +147,21 @@
         return;
       }
       try {
-        const w = this.root.clientWidth || MAX_DIM;
-        const url = await fileToDataUrl(file, w);
-        setSlotData(this.id, url);
-        setView(this.id, { x: 50, y: 50, s: 1 });
-        this.refresh();
+        const url = await fileToDataUrl(file);
+        const ok = setSlotData(this.id, url);
+        if (!ok) toast('이미지가 커서 이 기기에서만 임시로 보여요.');
+        this.refresh(url);
       } catch (err) {
         toast('이미지를 불러올 수 없어요.');
       }
     }
 
-    refresh() {
+    // sessionUrl: if a save just failed (quota), show it this session anyway.
+    refresh(sessionUrl) {
       // A local upload always wins over the baked-in static path — the
       // user's explicit drop is a deliberate override, not a fallback.
-      const stored = getSlotData(this.id);
-      const url = stored || this.staticSrc;
-      const view = stored ? getView(this.id) : { x: 50, y: 50, s: 1 };
+      const url = getSlotData(this.id) || sessionUrl || this.staticSrc;
       if (url) {
-        applyView(this.img, view);
         if (this.img.getAttribute('src') !== url) {
           this.img.src = url;
         } else if (this.img.complete && this.img.naturalWidth > 0) {
@@ -196,12 +172,6 @@
         this.root.classList.remove('filled');
       }
     }
-
-    openViewer(e) {
-      if (galleryIds.indexOf(this.id) >= 0) {
-        openLightbox(this.id);
-      }
-    }
   }
 
   const slotControllers = new Map();
@@ -209,63 +179,6 @@
     const ctrl = new ImageSlotController(el);
     slotControllers.set(ctrl.id, ctrl);
   });
-
-  // ============ reframe (position/zoom) editor ============
-  const reframeEl = document.getElementById('reframe');
-  const reframeStage = document.getElementById('reframeStage');
-  const reframeImg = document.getElementById('reframeImg');
-  const reframeZoom = document.getElementById('reframeZoom');
-  const reframeDone = document.getElementById('reframeDone');
-  let reframeCtrl = null;
-  let reframeView = { x: 50, y: 50, s: 1 };
-
-  function openReframe(ctrl) {
-    reframeCtrl = ctrl;
-    reframeView = Object.assign({ x: 50, y: 50, s: 1 }, getView(ctrl.id));
-    reframeImg.src = ctrl.img.src;
-    reframeZoom.value = reframeView.s;
-    applyView(reframeImg, reframeView);
-    reframeEl.hidden = false;
-  }
-  function closeReframe(commit) {
-    if (commit && reframeCtrl) {
-      setView(reframeCtrl.id, reframeView);
-      reframeCtrl.refresh();
-    }
-    reframeEl.hidden = true;
-    reframeCtrl = null;
-  }
-  reframeDone.addEventListener('click', () => closeReframe(true));
-  reframeEl.addEventListener('click', (e) => { if (e.target === reframeEl) closeReframe(true); });
-  document.addEventListener('keydown', (e) => {
-    if (!reframeEl.hidden && e.key === 'Escape') closeReframe(true);
-  });
-  reframeZoom.addEventListener('input', () => {
-    reframeView.s = parseFloat(reframeZoom.value);
-    applyView(reframeImg, reframeView);
-  });
-  (function enableDrag() {
-    let dragging = false;
-    let start = { px: 0, py: 0, x: 50, y: 50 };
-    reframeStage.addEventListener('pointerdown', (e) => {
-      dragging = true;
-      reframeStage.classList.add('grabbing');
-      reframeStage.setPointerCapture(e.pointerId);
-      start = { px: e.clientX, py: e.clientY, x: reframeView.x, y: reframeView.y };
-    });
-    reframeStage.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      const rect = reframeStage.getBoundingClientRect();
-      const dx = ((e.clientX - start.px) / rect.width) * -100;
-      const dy = ((e.clientY - start.py) / rect.height) * -100;
-      reframeView.x = Math.max(0, Math.min(100, start.x + dx));
-      reframeView.y = Math.max(0, Math.min(100, start.y + dy));
-      applyView(reframeImg, reframeView);
-    });
-    const stop = () => { dragging = false; reframeStage.classList.remove('grabbing'); };
-    reframeStage.addEventListener('pointerup', stop);
-    reframeStage.addEventListener('pointercancel', stop);
-  })();
 
   // ============ story carousel ============
   const storyScroller = document.getElementById('storyScroller');
