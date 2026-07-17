@@ -51,76 +51,12 @@
   }
   buildCalendar();
 
-  // ============ image slots ============
-  // Longest edge is kept up to MAX_DIM so uploaded previews stay high-res
-  // (independent of the on-screen slot size). Deployed photos placed as
-  // static files under assets/images/ are shown at full original quality —
-  // this re-encode only applies to in-browser preview uploads.
-  const MAX_DIM = 2000;
-  const ACCEPT = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
+  // ============ image slots (read-only) ============
+  // Photos are baked-in static files under assets/images/. The invitation is
+  // view-only for visitors — no upload, drag, or edit UI. The couple changes
+  // photos by replacing the files in the repo (same filename overwrites).
   const GALLERY_COUNT = 25;
   const galleryIds = Array.from({ length: GALLERY_COUNT }, (_, i) => 'g' + (i + 1));
-
-  // Preview images are persisted in IndexedDB (as Blobs), not localStorage.
-  // localStorage caps at ~5-10MB and stores text (a high-res photo as a
-  // base64 data-URL is huge), so a handful of gallery photos overflowed it
-  // — that was the "이미지가 커서 안 들어감" error. IndexedDB holds Blobs
-  // natively with a much larger quota, so 25+ high-res previews fit.
-  const DB_NAME = 'invite-images';
-  const STORE = 'slots';
-  let _dbP = null;
-  function idb() {
-    if (_dbP) return _dbP;
-    _dbP = new Promise((resolve, reject) => {
-      let req;
-      try { req = indexedDB.open(DB_NAME, 1); }
-      catch (e) { reject(e); return; }
-      req.onupgradeneeded = () => { req.result.createObjectStore(STORE); };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    return _dbP;
-  }
-  async function idbGet(id) {
-    try {
-      const db = await idb();
-      return await new Promise((resolve) => {
-        const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(id);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-      });
-    } catch (e) { return null; }
-  }
-  async function idbPut(id, blob) {
-    try {
-      const db = await idb();
-      return await new Promise((resolve) => {
-        const tx = db.transaction(STORE, 'readwrite');
-        tx.objectStore(STORE).put(blob, id);
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => resolve(false);
-        tx.onabort = () => resolve(false);
-      });
-    } catch (e) { return false; }
-  }
-
-  async function fileToWebpBlob(file) {
-    const bitmap = await createImageBitmap(file);
-    try {
-      const longest = Math.max(bitmap.width, bitmap.height);
-      const scale = Math.min(1, MAX_DIM / longest);
-      const w = Math.max(1, Math.round(bitmap.width * scale));
-      const h = Math.max(1, Math.round(bitmap.height * scale));
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
-      return await new Promise((resolve, reject) => {
-        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('encode'))), 'image/webp', 0.9);
-      });
-    } finally {
-      if (bitmap.close) bitmap.close();
-    }
-  }
 
   class ImageSlotController {
     constructor(root) {
@@ -128,93 +64,19 @@
       this.id = root.dataset.slot;
       this.staticSrc = root.dataset.static || '';
       this.img = root.querySelector('.img-slot-img');
-      this.input = root.querySelector('.img-slot-input');
-      this._depth = 0;
-      this._objUrl = null;
 
-      // A static path that doesn't exist yet (photo not delivered) must fall
-      // back to the empty placeholder, not a broken-image icon. IDB-backed
-      // images mark themselves filled on assignment (we already hold the
-      // Blob), so this load/error pair only governs the static-src case.
+      // Mark filled once the photo decodes; a missing file just leaves the
+      // neutral empty frame (no broken-image icon, no upload prompt).
       this.img.addEventListener('load', () => this.root.classList.add('filled'));
-      this.img.addEventListener('error', () => {
-        if (!this._objUrl) this.root.classList.remove('filled');
-      });
+      this.img.addEventListener('error', () => this.root.classList.remove('filled'));
 
-      root.addEventListener('click', () => {
-        if (!this.root.classList.contains('filled')) {
-          // Empty slot → pick a file.
-          this.input.click();
-          return;
-        }
-        // Filled: only the gallery opens the enlarged viewer. Story/hero
-        // slots do nothing on click (no enlarge, no zoom).
-        if (galleryIds.indexOf(this.id) >= 0) openLightbox(this.id);
-      });
-      this.input.addEventListener('change', () => {
-        const f = this.input.files && this.input.files[0];
-        if (f) this.ingest(f);
-        this.input.value = '';
-      });
-      ['dragenter', 'dragover'].forEach((evt) => {
-        root.addEventListener(evt, (e) => {
-          e.preventDefault();
-          if (evt === 'dragenter') this._depth++;
-          root.classList.add('drag-over');
-        });
-      });
-      root.addEventListener('dragleave', () => {
-        if (--this._depth <= 0) { this._depth = 0; root.classList.remove('drag-over'); }
-      });
-      root.addEventListener('drop', (e) => {
-        e.preventDefault();
-        this._depth = 0;
-        root.classList.remove('drag-over');
-        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if (f) this.ingest(f);
-      });
-
-      this.refresh();
-    }
-
-    async ingest(file) {
-      if (ACCEPT.indexOf(file.type) < 0) {
-        toast('PNG, JPEG, WebP, AVIF 이미지만 가능해요.');
-        return;
+      // Only the gallery is interactive — tap a photo to open the viewer.
+      if (galleryIds.indexOf(this.id) >= 0) {
+        root.style.cursor = 'pointer';
+        root.addEventListener('click', () => openLightbox(this.id));
       }
-      try {
-        const blob = await fileToWebpBlob(file);
-        const ok = await idbPut(this.id, blob);
-        if (!ok) toast('저장에 실패했어요 — 이 기기에서만 임시로 보여요.');
-        this.setBlob(blob);
-      } catch (err) {
-        toast('이미지를 불러올 수 없어요.');
-      }
-    }
 
-    setBlob(blob) {
-      if (this._objUrl) { URL.revokeObjectURL(this._objUrl); this._objUrl = null; }
-      this._objUrl = URL.createObjectURL(blob);
-      this.img.src = this._objUrl;
-      // We hold the Blob, so it IS filled regardless of the (lazy) load event.
-      this.root.classList.add('filled');
-    }
-
-    async refresh() {
-      // A local upload always wins over the baked-in static path — the
-      // user's explicit drop is a deliberate override, not a fallback.
-      const blob = await idbGet(this.id);
-      if (blob) { this.setBlob(blob); return; }
-      if (this.staticSrc) {
-        if (this.img.getAttribute('src') !== this.staticSrc) {
-          this.img.src = this.staticSrc;
-        } else if (this.img.complete && this.img.naturalWidth > 0) {
-          this.root.classList.add('filled');
-        }
-      } else {
-        this.img.removeAttribute('src');
-        this.root.classList.remove('filled');
-      }
+      if (this.staticSrc) this.img.src = this.staticSrc;
     }
   }
 
@@ -223,20 +85,13 @@
     const scroller = document.getElementById('galleryScroller');
     if (!scroller) return;
     scroller.innerHTML = '';
-    const icon =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-      'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
-      '<rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle>' +
-      '<path d="m21 15-5-5L5 21"></path></svg>';
     galleryIds.forEach((id, i) => {
       const slide = document.createElement('div');
       slide.className = 'gallery-slide';
       slide.innerHTML =
-        '<div class="gallery-img img-slot" data-slot="' + id + '" data-shape="rounded" data-radius="4" data-static="">' +
-        '<div class="img-slot-inner"><img class="img-slot-img" alt="" loading="lazy">' +
-        '<div class="img-slot-empty">' + icon +
-        '<div class="cap">사진 ' + String(i + 1).padStart(2, '0') + '</div></div></div>' +
-        '<input type="file" class="img-slot-input" accept="image/png,image/jpeg,image/webp,image/avif" hidden>' +
+        '<div class="gallery-img img-slot" data-slot="' + id + '" data-shape="rounded" data-radius="4" ' +
+        'data-static="assets/images/gallery-' + (i + 1) + '.jpg">' +
+        '<div class="img-slot-inner"><img class="img-slot-img" alt="사진 ' + (i + 1) + '" loading="lazy"></div>' +
         '</div>';
       scroller.appendChild(slide);
     });
@@ -300,9 +155,12 @@
   let lbIndex = 0;
 
   function openLightbox(id) {
+    // Build from the known photo sources, not the DOM 'filled' state —
+    // gallery images are lazy-loaded, so off-screen ones aren't decoded yet
+    // but their src is known and belongs in the viewer.
     lbItems = galleryIds
       .map((gid) => ({ id: gid, ctrl: slotControllers.get(gid) }))
-      .filter((it) => it.ctrl && it.ctrl.root.classList.contains('filled'));
+      .filter((it) => it.ctrl && it.ctrl.staticSrc);
     if (!lbItems.length) return;
     lbIndex = Math.max(0, lbItems.findIndex((it) => it.id === id));
     renderLightbox();
@@ -310,7 +168,7 @@
   }
   function renderLightbox() {
     const it = lbItems[lbIndex];
-    lightboxImg.src = it.ctrl.img.src;
+    lightboxImg.src = it.ctrl.staticSrc || it.ctrl.img.src;
     lightboxCounter.textContent = (lbIndex + 1) + ' / ' + lbItems.length;
     const many = lbItems.length > 1;
     lightboxPrev.hidden = !many;
@@ -416,10 +274,14 @@
     requestAnimationFrame(step);
   }
 
+  function reflectMusic() {
+    musicToggle.classList.toggle('on', musicOn);
+    musicToggle.setAttribute('aria-pressed', String(musicOn));
+    musicToggle.setAttribute('aria-label', musicOn ? '배경음악 끄기' : '배경음악 켜기');
+  }
   musicToggle.addEventListener('click', async () => {
     musicOn = !musicOn;
-    musicToggle.setAttribute('aria-pressed', String(musicOn));
-    musicNote.classList.toggle('playing', musicOn);
+    reflectMusic();
     if (musicOn) {
       try {
         await bgm.play();
@@ -427,8 +289,7 @@
       } catch (e) {
         toast('배경음악 파일을 아직 준비 중이에요.');
         musicOn = false;
-        musicToggle.setAttribute('aria-pressed', 'false');
-        musicNote.classList.remove('playing');
+        reflectMusic();
       }
     } else {
       fadeTo(0, 400);

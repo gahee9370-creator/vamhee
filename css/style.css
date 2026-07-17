@@ -45,22 +45,42 @@ a:hover { color: var(--ac); }
   top: 14px;
   right: calc(50% - 201px);
   z-index: 50;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid rgba(58, 54, 48, .14);
-  background: rgba(248, 245, 240, .82);
+  background: rgba(248, 245, 240, .88);
   backdrop-filter: blur(6px);
-  color: var(--ac);
-  font-size: 15px;
+  color: #b6ada0;
+  font-size: 17px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
+  transition: background .2s, color .2s, border-color .2s, box-shadow .2s;
 }
-.music-note { display: inline-block; opacity: .5; }
-.music-note.playing { opacity: 1; animation: pulse 1s infinite alternate; }
+/* 재생 중(ON): 핑크로 채워지고 아이콘 흰색 + 맥동 → 상태가 확실히 보임 */
+.music-toggle.on {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: #fff;
+  box-shadow: 0 3px 14px rgba(206, 105, 150, .45);
+}
+.music-note { display: inline-block; line-height: 1; }
+.music-toggle.on .music-note { animation: pulse 1s infinite alternate; }
+/* 꺼짐(OFF)일 때 살짝 사선(음소거 느낌) */
+.music-toggle::after {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 2px;
+  background: #b6ada0;
+  border-radius: 2px;
+  transform: rotate(-45deg);
+  transition: opacity .2s;
+}
+.music-toggle.on::after { opacity: 0; }
 
 /* ---------- image slot ---------- */
 .img-slot {
@@ -69,7 +89,6 @@ a:hover { color: var(--ac); }
   height: 100%;
   overflow: hidden;
   background: rgba(0, 0, 0, .04);
-  cursor: pointer;
 }
 .img-slot[data-shape="rect"] { border-radius: 0; }
 .img-slot[data-shape="rounded"] { border-radius: 12px; }
@@ -96,12 +115,12 @@ a:hover { color: var(--ac); }
   text-align: center;
   padding: 12px;
   color: rgba(58, 54, 48, .5);
-  font-size: 13px;
+  font-size: 14px;
   user-select: none;
 }
 .img-slot-empty svg { opacity: .45; }
 .img-slot-empty .cap { max-width: 90%; font-weight: 500; letter-spacing: .01em; }
-.img-slot-empty .sub { font-size: 11px; }
+.img-slot-empty .sub { font-size: 12px; }
 .img-slot-empty .sub u { text-underline-offset: 2px; text-decoration-color: rgba(58, 54, 48, .3); }
 .img-slot.drag-over { outline: 2px solid var(--ac); outline-offset: -2px; background: rgba(206, 105, 150, .12); }
 .img-slot.filled .img-slot-img { display: block; }
@@ -132,7 +151,7 @@ a:hover { color: var(--ac); }
 }
 .eyebrow {
   font-family: ui-monospace, Menlo, monospace;
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: .34em;
   opacity: .9;
   color: var(--ac);
@@ -140,15 +159,15 @@ a:hover { color: var(--ac); }
 .hero-text .eyebrow { opacity: .9; color: inherit; letter-spacing: .34em; }
 .hero-names {
   font-family: 'Gowun Batang', serif;
-  font-size: 33px;
+  font-size: 34px;
   letter-spacing: .02em;
   margin-top: 16px;
   line-height: 1.35;
 }
-.hero-names .heart { font-size: 18px; margin: 0 12px; vertical-align: middle; opacity: .85; }
+.hero-names .heart { font-size: 19px; margin: 0 12px; vertical-align: middle; opacity: .85; }
 .hero-text .hr { width: 34px; height: 1px; background: rgba(253, 251, 247, .6); margin: 18px auto; }
-.hero-date { font-size: 13px; letter-spacing: .06em; opacity: .95; }
-.hero-venue { font-size: 12px; opacity: .85; margin-top: 5px; }
+.hero-date { font-size: 14px; letter-spacing: .06em; opacity: .95; }
+.hero-venue { font-size: 13px; opacity: .85; margin-top: 5px; }
 
 /* ---------- d-day ---------- */
 .dday {
@@ -156,30 +175,30 @@ a:hover { color: var(--ac); }
   text-align: center;
   border-bottom: 1px solid rgba(58, 54, 48, .08);
 }
-.dday-title { font-family: 'Gowun Batang', serif; font-size: 15px; margin-bottom: 16px; }
+.dday-title { font-family: 'Gowun Batang', serif; font-size: 16px; margin-bottom: 16px; }
 .dday-row { display: flex; justify-content: center; gap: 10px; }
 .dday-cell { min-width: 44px; }
 .dday-cell.wide { min-width: 52px; }
-.dday-num { font-family: 'Gowun Batang', serif; font-size: 24px; color: #4a463f; }
+.dday-num { font-family: 'Gowun Batang', serif; font-size: 25px; color: #4a463f; }
 .dday-num:not(.muted) { color: var(--ac); }
-.dday-label { font-size: 10px; letter-spacing: .1em; color: #9a9284; margin-top: 3px; }
-.dday-colon { align-self: center; color: #cfc7b8; font-size: 16px; }
+.dday-label { font-size: 11px; letter-spacing: .1em; color: #9a9284; margin-top: 3px; }
+.dday-colon { align-self: center; color: #cfc7b8; font-size: 17px; }
 
 /* ---------- greeting ---------- */
 .greeting { padding: 60px 34px 54px; text-align: center; }
-.greeting-title { font-family: 'Gowun Batang', serif; font-size: 22px; margin-top: 22px; line-height: 1.6; }
-.greeting-body { font-size: 14px; line-height: 2.15; color: #5f5a51; margin: 26px auto 0; max-width: 300px; }
+.greeting-title { font-family: 'Gowun Batang', serif; font-size: 23px; margin-top: 22px; line-height: 1.6; }
+.greeting-body { font-size: 15px; line-height: 2.15; color: #5f5a51; margin: 26px auto 0; max-width: 300px; }
 .hr { width: 34px; height: 1px; background: rgba(58, 54, 48, .18); }
 .hr.center { margin: 40px auto 34px; }
-.family { display: flex; flex-direction: column; gap: 16px; align-items: center; font-size: 15px; line-height: 1.5; }
+.family { display: flex; flex-direction: column; gap: 16px; align-items: center; font-size: 16px; line-height: 1.5; }
 .family .parents { color: #8a8378; }
-.family .rel { font-size: 12px; color: #a9a294; }
-.family .who { font-family: 'Gowun Batang', serif; font-size: 17px; font-weight: 700; }
+.family .rel { font-size: 13px; color: #a9a294; }
+.family .who { font-family: 'Gowun Batang', serif; font-size: 18px; font-weight: 700; }
 
 /* ---------- section head ---------- */
 .section-head { text-align: center; margin-bottom: 40px; }
 .section-head.small { margin-bottom: 14px; }
-.section-title { font-family: 'Gowun Batang', serif; font-size: 22px; margin-top: 12px; }
+.section-title { font-family: 'Gowun Batang', serif; font-size: 23px; margin-top: 12px; }
 
 /* ---------- story ---------- */
 .story-section { padding: 56px 34px 54px; background: #f2ede5; }
@@ -195,9 +214,9 @@ a:hover { color: var(--ac); }
 .story-slide { flex: 0 0 100%; box-sizing: border-box; scroll-snap-align: center; padding-right: 16px; }
 .story-img-wrap { aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: rgba(0, 0, 0, .04); }
 .story-text { text-align: center; margin-top: 22px; }
-.story-no { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac); }
-.story-title { font-family: 'Gowun Batang', serif; font-size: 18px; margin: 8px 0 10px; }
-.story-body { font-size: 13.5px; line-height: 1.95; color: #5f5a51; max-width: 300px; margin: 0 auto; }
+.story-no { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: .14em; color: var(--ac); }
+.story-title { font-family: 'Gowun Batang', serif; font-size: 19px; margin: 8px 0 10px; }
+.story-body { font-size: 14.5px; line-height: 1.95; color: #5f5a51; max-width: 300px; margin: 0 auto; }
 
 .arrow {
   position: absolute;
@@ -212,7 +231,7 @@ a:hover { color: var(--ac); }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 23px;
   cursor: pointer;
   z-index: 3;
   user-select: none;
@@ -234,7 +253,7 @@ a:hover { color: var(--ac); }
 }
 .dots button.active { background: var(--ac); width: 20px; }
 
-.hint { text-align: center; font-size: 11.5px; color: #a9a294; margin-top: 14px; }
+.hint { text-align: center; font-size: 12.5px; color: #a9a294; margin-top: 14px; }
 .gallery-section .hint { margin-top: 16px; }
 
 /* ---------- gallery ---------- */
@@ -253,7 +272,7 @@ a:hover { color: var(--ac); }
 
 /* ---------- accounts ---------- */
 .accounts-section { padding: 56px 34px 54px; background: #f2ede5; }
-.accounts-intro { font-size: 13px; line-height: 1.9; color: #7c766c; margin-top: 16px; }
+.accounts-intro { font-size: 14px; line-height: 1.9; color: #7c766c; margin-top: 16px; }
 .accordion { margin-top: 20px; }
 .accordion + .accordion { margin-top: 12px; }
 .accordion-toggle {
@@ -267,10 +286,10 @@ a:hover { color: var(--ac); }
   align-items: center;
   cursor: pointer;
   font-family: 'Gowun Dodum', sans-serif;
-  font-size: 14.5px;
+  font-size: 15.5px;
   color: #3a3630;
 }
-.chevron { display: inline-block; transition: transform .2s; color: #a9a294; font-size: 18px; }
+.chevron { display: inline-block; transition: transform .2s; color: #a9a294; font-size: 19px; }
 .chevron.open { transform: rotate(90deg); }
 .accordion-panel { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .accordion-panel[hidden] { display: none; }
@@ -283,10 +302,10 @@ a:hover { color: var(--ac); }
   justify-content: space-between;
   align-items: center;
 }
-.account-role { font-size: 11px; color: #a9a294; }
-.account-bank { font-size: 14px; margin-top: 3px; }
+.account-role { font-size: 12px; color: #a9a294; }
+.account-bank { font-size: 15px; margin-top: 3px; }
 .account-bank .num { color: #6a655c; }
-.account-owner { font-size: 12.5px; color: #8a8378; margin-top: 2px; }
+.account-owner { font-size: 13.5px; color: #8a8378; margin-top: 2px; }
 .copy-btn {
   flex: none;
   padding: 8px 12px;
@@ -294,7 +313,7 @@ a:hover { color: var(--ac); }
   border: 1px solid var(--ac);
   background: transparent;
   color: var(--ac);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
   font-family: 'Gowun Dodum', sans-serif;
@@ -304,21 +323,21 @@ a:hover { color: var(--ac); }
 .location-section { padding: 56px 34px 44px; }
 .location-section .section-head { margin-bottom: 28px; }
 .venue-info { text-align: center; margin-bottom: 26px; }
-.venue-name { font-family: 'Gowun Batang', serif; font-size: 18px; }
-.venue-when { font-size: 13px; color: #7c766c; margin-top: 8px; line-height: 1.7; }
-.venue-address { font-size: 12.5px; color: #8a8378; margin: 14px auto 0; line-height: 1.7; max-width: 300px; }
+.venue-name { font-family: 'Gowun Batang', serif; font-size: 19px; }
+.venue-when { font-size: 14px; color: #7c766c; margin-top: 8px; line-height: 1.7; }
+.venue-address { font-size: 13.5px; color: #8a8378; margin: 14px auto 0; line-height: 1.7; max-width: 300px; }
 
 .calendar { background: #f2ede5; border-radius: 10px; padding: 20px 18px 22px; margin-bottom: 22px; }
-.calendar-title { text-align: center; font-family: 'Gowun Batang', serif; font-size: 15px; margin-bottom: 14px; }
+.calendar-title { text-align: center; font-family: 'Gowun Batang', serif; font-size: 16px; margin-bottom: 14px; }
 .calendar-dow, .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-.calendar-dow { font-size: 11px; color: #a9a294; margin-bottom: 6px; }
+.calendar-dow { font-size: 12px; color: #a9a294; margin-bottom: 6px; }
 .calendar-dow .sun { color: #c58a83; }
 .calendar-grid div {
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12.5px;
+  font-size: 13.5px;
   border-radius: 50%;
   color: #5f5a51;
 }
@@ -331,7 +350,7 @@ a:hover { color: var(--ac); }
   border-radius: 8px;
   border: 1px solid rgba(58, 54, 48, .12);
   background: #fdfbf7;
-  font-size: 12.5px;
+  font-size: 13.5px;
   cursor: pointer;
   font-family: 'Gowun Dodum', sans-serif;
   color: #3a3630;
@@ -343,7 +362,7 @@ a:hover { color: var(--ac); }
   border-radius: 8px;
   border: 1px solid var(--ac);
   color: var(--ac);
-  font-size: 12.5px;
+  font-size: 13.5px;
 }
 
 /* ---------- footer ---------- */
@@ -353,8 +372,8 @@ a:hover { color: var(--ac); }
   background: #f2ede5;
   border-top: 1px solid rgba(58, 54, 48, .06);
 }
-.footer-names { font-family: 'Gowun Batang', serif; font-size: 16px; line-height: 1.7; color: #4a463f; }
-.footer-sub { font-size: 12.5px; color: #8a8378; margin-top: 8px; }
+.footer-names { font-family: 'Gowun Batang', serif; font-size: 17px; line-height: 1.7; color: #4a463f; }
+.footer-sub { font-size: 13.5px; color: #8a8378; margin-top: 8px; }
 .footer-actions { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
 .btn-share {
   padding: 11px 20px;
@@ -362,7 +381,7 @@ a:hover { color: var(--ac); }
   border: none;
   background: var(--ac);
   color: #fdfbf7;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   font-family: 'Gowun Dodum', sans-serif;
 }
@@ -372,7 +391,7 @@ a:hover { color: var(--ac); }
   border: 1px solid rgba(58, 54, 48, .14);
   background: transparent;
   color: #3a3630;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   font-family: 'Gowun Dodum', sans-serif;
 }
@@ -399,7 +418,7 @@ a:hover { color: var(--ac); }
   border-radius: 50%;
   background: rgba(255, 255, 255, .16);
   color: #fff;
-  font-size: 26px;
+  font-size: 27px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -420,7 +439,7 @@ a:hover { color: var(--ac); }
 .lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; }
 .lightbox-counter {
   color: rgba(255, 255, 255, .82);
-  font-size: 13px;
+  font-size: 14px;
   font-family: ui-monospace, Menlo, monospace;
   letter-spacing: .12em;
   margin-top: 20px;
@@ -437,7 +456,7 @@ a:hover { color: var(--ac); }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 25px;
   cursor: pointer;
 }
 .lightbox-arrow.left { left: 10px; }
@@ -452,7 +471,7 @@ a:hover { color: var(--ac); }
   transform: translateX(-50%);
   background: rgba(40, 37, 32, .88);
   color: #fdfbf7;
-  font-size: 12.5px;
+  font-size: 13.5px;
   padding: 10px 18px;
   border-radius: 20px;
   z-index: 200;
