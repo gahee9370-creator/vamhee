@@ -1,14 +1,12 @@
 (() => {
   'use strict';
 
-  // ============ 이미지 저장 방지 (약한 방어) ============
-  // 우클릭 저장 / 드래그 저장 억제. 스크린샷·화면녹화는 OS 기능이라 못 막음.
-  document.addEventListener('contextmenu', (e) => {
-    if (e.target && e.target.tagName === 'IMG') e.preventDefault();
-  });
-  document.addEventListener('dragstart', (e) => {
-    if (e.target && e.target.tagName === 'IMG') e.preventDefault();
-  });
+  // ============ 이미지/텍스트 보호 (약한 방어) ============
+  // 우클릭 메뉴·드래그·텍스트 선택을 페이지 전체에서 억제.
+  // (스크린샷·개발자도구·"페이지 저장"은 OS/브라우저 기능이라 막을 수 없음)
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+  document.addEventListener('dragstart', (e) => e.preventDefault());
+  document.addEventListener('selectstart', (e) => e.preventDefault());
 
   // ============ 설정 ============
   // 카카오톡 공유(리치 카드: 큰 이미지 + 버튼)용 JavaScript 키.
@@ -441,15 +439,3 @@
     });
   })();
 })();
-// 이미지 및 텍스트 보호: 우클릭, 드래그, 선택 방지
-document.addEventListener('contextmenu', function(event) {
-  event.preventDefault();
-});
-
-document.addEventListener('dragstart', function(event) {
-  event.preventDefault();
-});
-
-document.addEventListener('selectstart', function(event) {
-  event.preventDefault();
-});
