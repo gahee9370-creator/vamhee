@@ -549,3 +549,24 @@ a:hover { color: var(--ac); }
   .hero-slot .img-slot-img { animation: none; }
   .intro { display: none !important; }
 }
+
+/* ==================== 이미지 저장 방지 (약한 방어) ==================== */
+/* 스크린샷은 OS 기능이라 못 막고, 저장·드래그·길게눌러 저장만 억제 */
+img, .img-slot, .img-slot-img, .lightbox-img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* 이미지 위 투명 보호막 — 모바일 길게눌러 저장 억제 (탭/스와이프는 통과) */
+.img-guard {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

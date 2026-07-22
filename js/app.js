@@ -1,6 +1,15 @@
 (() => {
   'use strict';
 
+  // ============ 이미지 저장 방지 (약한 방어) ============
+  // 우클릭 저장 / 드래그 저장 억제. 스크린샷·화면녹화는 OS 기능이라 못 막음.
+  document.addEventListener('contextmenu', (e) => {
+    if (e.target && e.target.tagName === 'IMG') e.preventDefault();
+  });
+  document.addEventListener('dragstart', (e) => {
+    if (e.target && e.target.tagName === 'IMG') e.preventDefault();
+  });
+
   // ============ 설정 ============
   // 카카오톡 공유(리치 카드: 큰 이미지 + 버튼)용 JavaScript 키.
   // https://developers.kakao.com → 내 애플리케이션 → 앱 키 → JavaScript 키
@@ -418,17 +427,17 @@
       });
     }, { passive: true });
   })();
+
+  // ============ 이미지 저장 방지 — 투명 보호막 ============
+  // 사진 위에 투명한 막을 덧씌워, 모바일에서 사진을 길게 눌러도 '사진'이 아니라
+  // 막이 잡혀 저장 메뉴가 안 뜬다. 탭(크게보기)·스와이프·스크롤은 막을 통과해
+  // 그대로 동작한다. (스크린샷은 OS 기능이라 여전히 못 막음)
+  (function imageGuard() {
+    document.querySelectorAll('.img-slot-inner, .lightbox-stage').forEach((el) => {
+      if (el.querySelector(':scope > .img-guard')) return;
+      const g = document.createElement('div');
+      g.className = 'img-guard';
+      el.appendChild(g);
+    });
+  })();
 })();
-
-// 이미지 및 텍스트 보호: 우클릭, 드래그, 선택 방지
-document.addEventListener('contextmenu', function(event) {
-  event.preventDefault();
-});
-
-document.addEventListener('dragstart', function(event) {
-  event.preventDefault();
-});
-
-document.addEventListener('selectstart', function(event) {
-  event.preventDefault();
-});
